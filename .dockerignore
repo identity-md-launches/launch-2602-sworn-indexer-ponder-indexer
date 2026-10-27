@@ -1,0 +1,11 @@
+node_modules
+.ponder
+generated
+.git
+.github
+.env
+.env.*
+*.log
+.build-id
+test
+.imd

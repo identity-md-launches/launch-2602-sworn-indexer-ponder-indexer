@@ -1,0 +1,2 @@
+patchedDependencies:
+  ponder@0.18.2: patches/ponder@0.18.2.patch

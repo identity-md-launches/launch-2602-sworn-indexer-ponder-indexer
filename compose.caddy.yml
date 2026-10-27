@@ -1,0 +1,13 @@
+# Joins the indexer to the shared Docker network Caddy runs on, so Caddy reaches it as
+# indexer:42069 (or by container name). Use together with docker-compose.yml:
+#   docker compose -f docker-compose.yml -f compose.caddy.yml up -d --build
+services:
+  indexer:
+    networks:
+      - default
+      - caddy
+
+networks:
+  caddy:
+    name: ${CADDY_NETWORK:-caddy}
+    external: true

@@ -1,0 +1,54 @@
+# Docker host target: one container plus one named volume. With no DATABASE_URL the
+# indexer keeps its data in PGlite on the `sworn-data` volume.
+#
+#   cp env.example .env   # set PONDER_RPC_URL_1
+#   docker compose up -d --build
+#
+# Postgres instead of PGlite (any Docker host with room for a second container):
+#   set POSTGRES_PASSWORD and
+#   DATABASE_URL=postgres://postgres:<POSTGRES_PASSWORD>@postgres:5432/postgres in .env, then
+#   docker compose --profile postgres up -d --build
+#
+# Behind Caddy on its shared network: add -f compose.caddy.yml (see README).
+services:
+  indexer:
+    build: .
+    image: sworn-indexer:latest
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PONDER_RPC_URL_1: ${PONDER_RPC_URL_1:?set PONDER_RPC_URL_1 in .env or the environment}
+      PORT: ${PORT:-42069}
+      PGLITE_DIRECTORY: /data/pglite
+    volumes:
+      - sworn-data:/data
+    ports:
+      - "${HOST_PORT:-42069}:${PORT:-42069}"
+    mem_limit: ${MEM_LIMIT:-768m}
+    cpus: 2
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:'+(process.env.PORT||42069)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+    restart: unless-stopped
+
+  postgres:
+    profiles: ["postgres"]
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+    volumes:
+      - sworn-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+    restart: unless-stopped
+
+volumes:
+  sworn-data:
+  sworn-pgdata:
+

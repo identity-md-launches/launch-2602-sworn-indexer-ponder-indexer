@@ -1,0 +1,27 @@
+diff --git a/dist/esm/build/index.js b/dist/esm/build/index.js
+index 2a8cd42d07dbb2a364d32cc9c1a495044d725e8d..2a081d2011489cc87697f5142e872461b07be94d 100644
+--- a/dist/esm/build/index.js
++++ b/dist/esm/build/index.js
+@@ -407,7 +407,6 @@ export const createBuild = async ({ common, cliOptions, }) => {
+                     if (route.path === "/ready" ||
+                         route.path === "/status" ||
+                         route.path === "/metrics" ||
+-                        route.path === "/health" ||
+                         route.path === "/client") {
+                         const error = new BuildError(`Validation failed: API route "${route.path}" is reserved for internal use.`);
+                         error.stack = undefined;
+diff --git a/dist/esm/server/index.js b/dist/esm/server/index.js
+index 1ba85f5e237a81150f428e98179a97c20eddca6d..d319c3a80555398cb5d789c7ef00534af646f74c 100644
+--- a/dist/esm/server/index.js
++++ b/dist/esm/server/index.js
+@@ -51,9 +51,7 @@ export async function createServer({ common, database, apiBuild, }) {
+             return c.json(error, 500);
+         }
+     })
+-        .get("/health", (c) => {
+-        return c.text("", 200);
+-    })
++        // sworn-indexer patch: /health is served by the app (src/api/index.ts) as JSON.
+         .get("/ready", async (c) => {
+         const isReady = await database.readonlyQB.wrap({ label: "select_ready" }, (db) => db
+             .select()
